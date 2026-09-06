@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title id="pageTitle">My Task &amp; Project Planner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+  :root{
+    --navy:#4b2e6b; --dark-blue:#3a2352; --med-blue:#2a9d8f; --light-blue:#a8dadc;
+    --soft-yellow:#d8b4e2; --violet:#d3c2df; --charcoal:#414042; --gray:#d1d3d4;
+    --bg:#f2f2f2; --white:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Roboto',Arial,sans-serif;background:var(--bg);color:var(--charcoal);}
+  .app{max-width:1150px;margin:0 auto;padding:0 0 60px;}
+
+  .header{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--med-blue) 100%);
+    border-radius:0 0 16px 16px; padding:26px 32px; color:var(--white);
+  }
+  .header-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .check-badge{width:34px;height:34px;border-radius:50%;border:2px solid var(--soft-yellow);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .check-badge i{color:var(--soft-yellow);font-size:18px;}
+  .pill{background:var(--soft-yellow);color:var(--charcoal);font-size:11px;font-weight:700;letter-spacing:.4px;padding:6px 14px;border-radius:20px;}
+  .header h1{margin:0;font-size:23px;font-weight:900;}
+  .header p{margin:8px 0 0;font-size:13px;color:#c7d6e2;font-style:italic;}
+
+  .nav{display:flex;gap:6px;margin:16px 32px 0;flex-wrap:wrap;}
+  .nav button{border:none;background:var(--white);color:var(--charcoal);padding:10px 16px;border-radius:10px 10px 0 0;font-size:13px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;}
+  .nav button.active{border-bottom:3px solid var(--med-blue);color:var(--navy);}
+  .nav button:not(.active):hover{background:#e9e9e9;}
+
+  .panel{background:var(--white);margin:0 32px;border-radius:0 12px 12px 12px;padding:22px;min-height:420px;box-shadow:0 2px 10px rgba(0,0,0,.06);}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap;}
+  .toolbar h2{margin:0;font-size:15px;color:var(--navy);font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+  .toolbar-right{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .btn{background:var(--soft-yellow);color:var(--charcoal);border:none;padding:9px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+  .btn:hover{filter:brightness(.96);}
+  .btn.secondary{background:var(--gray);}
+  .btn.blue{background:var(--med-blue);color:var(--white);}
+  .btn.ghost{background:transparent;color:var(--med-blue);border:1.5px solid var(--med-blue);}
+  .btn.small{padding:5px 10px;font-size:11.5px;}
+
+  .columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,0.55fr);gap:16px;}
+  @media(max-width:820px){.columns{grid-template-columns:minmax(0,1fr);}}
+  .col-title{background:var(--navy);color:var(--white);padding:9px 13px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+  .col-body{border:1px solid var(--gray);border-radius:0 0 8px 8px;padding:5px;min-height:140px;max-height:360px;overflow-y:auto;}
+  .task-row{display:flex;align-items:flex-start;gap:9px;padding:9px 7px;border-bottom:1px solid #eee;}
+  .task-row:last-child{border-bottom:none;}
+  .task-row input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--med-blue);cursor:pointer;flex-shrink:0;}
+  .task-main{flex:1;min-width:0;}
+  .task-name{font-size:13px;line-height:1.35;}
+  .task-name.done{text-decoration:line-through;color:var(--light-blue);}
+  .task-meta{font-size:10.5px;color:var(--light-blue);margin-top:2px;font-weight:700;}
+  .task-due{font-size:11.5px;color:var(--med-blue);font-weight:700;white-space:nowrap;min-width:56px;text-align:right;}
+  .task-due.overdue{color:#c0392b;}
+  .edit-btn{color:var(--light-blue);cursor:pointer;padding:4px 2px;flex-shrink:0;align-self:flex-start;}
+  .edit-btn:hover{color:var(--med-blue);}
+  .focus-star{cursor:pointer;padding:4px 2px;flex-shrink:0;align-self:flex-start;color:var(--gray);}
+  .focus-star:hover{color:#c99a1e;}
+  .wait-badge{background:#fff3d0;color:#8a6d00;font-weight:700;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;}
+  .rock-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
+  .rock-card{border:1px solid var(--gray);border-radius:10px;overflow:hidden;}
+  .rock-head{background:var(--med-blue);color:var(--white);padding:9px 13px;font-weight:700;font-size:12.5px;}
+  .rock-item{padding:9px 13px;border-bottom:1px solid #eee;font-size:12.5px;}
+  .rock-item .d{font-size:10.5px;color:var(--light-blue);font-weight:700;margin-top:2px;}
+  .empty{color:var(--light-blue);font-style:italic;font-size:12.5px;padding:14px 8px;}
+
+  .accomp-item{padding:9px 7px;border-bottom:1px solid #eee;}
+  .accomp-item:last-child{border-bottom:none;}
+  .accomp-item .t{font-size:12.5px;}
+  .accomp-item .r{font-size:10.5px;color:var(--light-blue);font-weight:700;margin-top:2px;}
+
+  table.alltasks{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.alltasks th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--light-blue);border-bottom:2px solid var(--gray);padding:8px 6px;cursor:pointer;}
+  table.alltasks td{padding:8px 6px;border-bottom:1px solid #eee;}
+  table.alltasks tr:hover td{background:#fafafa;}
+
+  .rock-block{margin-bottom:22px;}
+  .rock-block h3{color:var(--navy);font-size:14px;margin:0 0 4px;}
+  .cap-note{font-size:11px;color:var(--light-blue);margin-bottom:8px;}
+  .proj-card{border:1px solid var(--gray);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+  .proj-head{display:flex;justify-content:space-between;align-items:center;background:#fafafa;padding:8px 12px;}
+  .proj-head .name{font-size:13px;font-weight:700;color:var(--charcoal);}
+  .proj-head .count{font-size:11px;color:var(--light-blue);margin-left:8px;}
+  .proj-tasks{padding:2px 4px;}
+  .backlog-list .proj-card{opacity:.85;}
+  .status-select{font-size:11.5px;font-weight:700;padding:5px 9px;border-radius:14px;cursor:pointer;border:1.5px solid var(--gray);background:var(--white);color:var(--charcoal);font-family:inherit;}
+  .status-select.st-active{background:var(--med-blue);color:var(--white);border-color:var(--med-blue);}
+  .status-select.st-completed{background:var(--light-blue);color:var(--white);border-color:var(--light-blue);}
+
+  .train-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  @media(max-width:820px){.train-cols{grid-template-columns:1fr;}}
+  .train-item{padding:9px 10px;border-bottom:1px solid #eee;font-size:12.5px;}
+  .train-item .inst{font-size:10.5px;color:var(--light-blue);font-weight:700;margin-top:2px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(1,66,106,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--white);border-radius:14px;padding:24px;max-width:440px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;}
+  .modal h3{margin:0 0 12px;color:var(--navy);font-size:16px;}
+  .modal label{display:block;font-size:11.5px;font-weight:700;margin:10px 0 4px;text-transform:uppercase;letter-spacing:.2px;color:var(--charcoal);}
+  .modal input[type=text],.modal input[type=date],.modal select{width:100%;padding:8px 10px;border:1.5px solid var(--gray);border-radius:8px;font-size:13.5px;font-family:inherit;}
+  .modal .row{display:flex;gap:10px;margin-top:18px;}
+  .dupe-warning{background:#fff8e6;border:1.5px solid var(--soft-yellow);border-radius:8px;padding:9px 11px;font-size:12px;margin-top:10px;display:none;}
+  .dupe-warning.show{display:block;}
+  .dupe-warning ul{margin:5px 0 0;padding-left:16px;}
+  .followup-question{border:1.5px solid var(--gray);border-radius:10px;padding:12px;margin-top:12px;}
+  .followup-question p{margin:0 0 7px;font-size:12.5px;font-weight:700;color:var(--navy);}
+  .nudge{background:#fff8e6;border:1.5px solid var(--soft-yellow);border-radius:8px;padding:10px;font-size:12px;margin-top:8px;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:99;display:none;}
+  .toast.show{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="check-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f2e28d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 13 9 18 20 6"></polyline></svg>
+      </div>
+      <div class="pill">ON TRACK</div>
+    </div>
+    <h1 id="headerTitle">My Task &amp; Project Planner</h1>
+    <p id="headerTagline">Currently working on, due this week, and accomplishments</p>
+  </div>
+
+  <div class="nav">
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="alltasks">All tasks</button>
+    <button class="tab-btn" data-tab="projects">Projects</button>
+    <button class="tab-btn" data-tab="completed">Completed</button>
+    <button class="tab-btn" id="trackerNavBtn" data-tab="training">Training</button>
+    <button class="tab-btn" data-tab="accomplishments">Accomplishments</button>
+    <button class="tab-btn" data-tab="settings">Rocks &amp; settings</button>
+  </div>
+
+  <div class="panel">
+
+    <div class="tab-panel" id="tab-dashboard">
+      <div id="backupBanner" style="display:none;background:#fff3d0;border:1.5px solid var(--soft-yellow);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span id="backupBannerText"></span>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn small blue" id="backupBannerExportBtn">Export now</button>
+          <button class="btn small ghost" id="backupBannerDismissBtn">Remind me next week</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <h2>Dashboard</h2>
+        <div class="toolbar-right">
+          <button class="btn ghost" id="copySummaryBtn">Copy to optimize tasks in Claude</button>
+          <button class="btn" id="openAddTask">+ Add task</button>
+          <button class="btn secondary" id="openBulkAdd">+ Bulk add</button>
+        </div>
+      </div>
+      <div class="columns">
+        <div>
+          <div class="col-title">Currently working on</div>
+          <div class="col-body" id="colWorking"></div>
+        </div>
+        <div>
+          <div class="col-title">Due this week</div>
+          <div class="col-body" id="colDueWeek"></div>
+        </div>
+        <div>
+          <div class="col-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span id="trackerDashTitle">Training</span>
+            <span id="goToTrainingLink" style="cursor:pointer;font-size:10.5px;font-weight:700;text-decoration:underline;text-transform:none;">View all &rarr;</span>
+          </div>
+          <div class="col-body" id="colTraining"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-alltasks" style="display:none;">
+      <div class="toolbar">
+        <h2>All open tasks</h2>
+        <div class="toolbar-right">
+          <input type="text" id="taskSearchInput" placeholder="Search tasks..." style="padding:8px 10px;border:1.5px solid var(--gray);border-radius:8px;font-family:inherit;font-size:13px;min-width:160px;">
+          <select id="projectFilter" style="padding:8px 10px;border:1.5px solid var(--gray);border-radius:8px;font-family:inherit;font-size:13px;">
+            <option value="">All projects</option>
+          </select>
+          <select id="waitingFilter" style="padding:8px 10px;border:1.5px solid var(--gray);border-radius:8px;font-family:inherit;font-size:13px;">
+            <option value="">Everyone</option>
+          </select>
+          <button class="btn" id="openAddTask2">+ Add task</button>
+          <button class="btn secondary" id="openBulkAdd2">+ Bulk add</button>
+        </div>
+      </div>
+      <table class="alltasks">
+        <thead><tr>
+          <th></th>
+          <th></th>
+          <th data-sort="name">Task</th>
+          <th data-sort="project">Project</th>
+          <th data-sort="waiting">Waiting on</th>
+          <th data-sort="due">Due date</th>
+        </tr></thead>
+        <tbody id="allTasksBody"></tbody>
+      </table>
+    </div>
+
+    <div class="tab-panel" id="tab-projects" style="display:none;">
+      <div class="toolbar">
+        <h2>Projects by rock</h2>
+        <button class="btn" id="openAddTask3">+ Add task</button>
+        <button class="btn secondary" id="openBulkAdd3">+ Bulk add</button>
+      </div>
+      <div id="rockProjectsWrap"></div>
+      <div class="rock-block">
+        <h3>Not linked to a rock</h3>
+        <div id="unassignedProjectsWrap"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-completed" style="display:none;">
+      <div class="toolbar"><h2>Completed archive</h2></div>
+      <div id="completedWrap"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-training" style="display:none;">
+      <div class="toolbar">
+        <h2 id="trackerTabTitle">Training</h2>
+        <button class="btn secondary" id="openAddTraining">+ Add training</button>
+      </div>
+      <div class="train-cols">
+        <div>
+          <div class="col-title" id="trackerColTitleThinking" style="background:var(--light-blue);">Thinking of</div>
+          <div class="col-body" id="trainThinking"></div>
+        </div>
+        <div>
+          <div class="col-title" id="trackerColTitleWorking">Currently working on</div>
+          <div class="col-body" id="trainWorking"></div>
+        </div>
+        <div>
+          <div class="col-title" id="trackerColTitleCompleted" style="background:var(--med-blue);">Completed</div>
+          <div class="col-body" id="trainCompleted"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-accomplishments" style="display:none;">
+      <div class="toolbar">
+        <h2>Accomplishments</h2>
+        <button class="btn secondary" id="openAddAccomp">+ Log accomplishment</button>
+      </div>
+      <div class="rock-grid" id="rockGrid"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-settings" style="display:none;">
+      <div class="toolbar"><h2>Manage rocks and projects</h2></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div>
+          <h3 id="rockCategoryLabel" style="font-size:13px;color:var(--navy);">Marketing rocks</h3>
+          <div id="rockManageList" style="margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="newRockName" placeholder="New rock name" style="flex:1;padding:8px 10px;border:1.5px solid var(--gray);border-radius:8px;font-family:inherit;">
+            <button class="btn blue" id="addRockBtn">Add</button>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:13px;color:var(--navy);">Projects</h3>
+          <div id="projManageList" style="margin-bottom:10px;"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <input type="text" id="newProjName" placeholder="New project name" style="padding:8px 10px;border:1.5px solid var(--gray);border-radius:8px;font-family:inherit;">
+            <select id="newProjRock" style="padding:8px 10px;border:1.5px solid var(--gray);border-radius:8px;font-family:inherit;"><option value="">No rock</option></select>
+            <button class="btn blue" id="addProjBtn">Add project</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px;border-top:1px solid var(--gray);padding-top:18px;">
+        <h3 style="font-size:13px;color:var(--navy);">Backup &amp; restore</h3>
+        <p style="font-size:12px;color:var(--light-blue);margin:4px 0 12px;">Download all your data as a file — separate from the app itself. Useful before big changes, or to bring your real data into a future updated version of this planner.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <button class="btn blue" id="exportDataBtn">Export my data</button>
+          <button class="btn secondary" id="importDataBtn">Import data...</button>
+          <input type="file" id="importDataFile" accept=".json" style="display:none;">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="overlay" id="addTaskOverlay">
+  <div class="modal">
+    <h3>Add a task</h3>
+    <label>Task name</label>
+    <input type="text" id="taskNameInput" placeholder="e.g. Follow up with David on Mitsubishi project">
+    <div class="dupe-warning" id="dupeWarning"></div>
+    <label>Project</label>
+    <select id="taskProject"></select>
+    <div id="newProjectInline" style="display:none;margin-top:8px;padding:10px;border:1.5px dashed var(--gray);border-radius:8px;">
+      <label style="margin-top:0;">New project name</label>
+      <input type="text" id="newProjectNameInline" placeholder="e.g. Truckload Program">
+      <label>Link to a rock (optional)</label>
+      <select id="newProjectRockInline"><option value="">No rock</option></select>
+    </div>
+    <label>Due date (optional)</label>
+    <input type="date" id="taskDueInput">
+    <label>Repeats</label>
+    <select id="taskRepeatInput">
+      <option value="">Doesn't repeat</option>
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
+    <label>Waiting on (optional)</label>
+    <input type="text" id="taskWaitingInput" list="waitingOnOptions" placeholder="e.g. Brian P">
+    <label style="display:flex;align-items:center;gap:8px;margin-top:14px;text-transform:none;font-size:13px;font-weight:500;cursor:pointer;">
+      <input type="checkbox" id="taskFocusInput" style="width:16px;height:16px;accent-color:var(--med-blue);cursor:pointer;margin:0;">
+      Currently working on this (shows on Dashboard)
+    </label>
+    <datalist id="waitingOnOptions">
+      <option value="Hernan"><option value="Gracie"><option value="IT"><option value="Brian P">
+    </datalist>
+    <div class="row">
+      <button class="btn secondary" id="cancelAddTask" style="flex:1;">Cancel</button>
+      <button class="btn blue" id="saveTaskBtn" style="flex:1;">Add task</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK ADD MODAL -->
+<div class="overlay" id="bulkAddOverlay">
+  <div class="modal" style="max-width:560px;">
+    <h3>Bulk add tasks</h3>
+    <p style="font-size:12.5px;color:var(--light-blue);margin:0 0 10px;">Paste tasks below, one per line — like from meeting notes. Optionally apply the same project, due date, or waiting-on to all of them.</p>
+    <textarea id="bulkTextarea" rows="6" placeholder="Follow up with David on Mitsubishi&#10;Send updated pricing to Chris&#10;Schedule QBR review with Brady" style="width:100%;padding:9px 10px;border:1.5px solid var(--gray);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <div>
+        <label style="margin-top:0;">Apply project to all (optional)</label>
+        <select id="bulkProject"></select>
+      </div>
+      <div>
+        <label style="margin-top:0;">Apply due date to all (optional)</label>
+        <input type="date" id="bulkDue">
+      </div>
+    </div>
+    <label>Apply "waiting on" to all (optional)</label>
+    <input type="text" id="bulkWaiting" list="waitingOnOptions" placeholder="e.g. Brian P">
+    <div class="row">
+      <button class="btn secondary" id="cancelBulkAdd" style="flex:1;">Cancel</button>
+      <button class="btn blue" id="previewBulkBtn" style="flex:1;">Preview</button>
+    </div>
+    <div id="bulkPreviewWrap" style="display:none;margin-top:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:6px;">Review before adding</div>
+      <div id="bulkPreviewList" style="max-height:260px;overflow-y:auto;border:1px solid var(--gray);border-radius:8px;"></div>
+      <div class="row">
+        <button class="btn blue" id="confirmBulkAddBtn" style="flex:1;">Add checked tasks</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPLETE TASK MODAL -->
+<div class="overlay" id="completeOverlay">
+  <div class="modal">
+    <h3 id="completeTitle">Nice work</h3>
+    <div id="recurrenceNote" style="display:none;background:#e3edf3;border:1.5px solid var(--med-blue);border-radius:8px;padding:10px 12px;font-size:12.5px;margin-bottom:4px;color:var(--navy);"></div>
+    <label id="endRecurrenceWrap" style="display:none;align-items:center;gap:8px;margin:8px 0 4px;text-transform:none;font-size:12.5px;font-weight:500;cursor:pointer;">
+      <input type="checkbox" id="endRecurrenceCheckbox" style="width:16px;height:16px;accent-color:var(--med-blue);cursor:pointer;margin:0;">
+      End this recurring series (don't create the next one)
+    </label>
+    <label id="endRecurrenceWrap" style="display:none;align-items:center;gap:8px;margin:8px 0 4px;text-transform:none;font-size:12.5px;font-weight:500;cursor:pointer;">
+      <input type="checkbox" id="endRecurrenceCheckbox" style="width:16px;height:16px;accent-color:var(--med-blue);cursor:pointer;margin:0;">
+      End this recurring series (don't create the next one)
+    </label>
+    <div class="followup-question" id="followupSection">
+      <p>Add a follow-up task?</p>
+      <input type="text" id="followupName" placeholder="Follow-up task name (leave blank to skip)">
+      <select id="followupProject" style="margin-top:8px;"></select>
+      <input type="date" id="followupDue" style="margin-top:8px;">
+    </div>
+    <div class="followup-question">
+      <p>Log this as an accomplishment for a marketing rock?</p>
+      <select id="accompRock"><option value="">N/A</option></select>
+      <input type="text" id="accompText" style="margin-top:8px;">
+    </div>
+    <div class="row"><button class="btn blue" id="finishCompleteBtn" style="flex:1;">Done</button></div>
+  </div>
+</div>
+
+<!-- ADD TRAINING MODAL -->
+<div class="overlay" id="addTrainingOverlay">
+  <div class="modal">
+    <h3 id="trackerModalTitle">Add training</h3>
+    <label>Name</label>
+    <input type="text" id="trainNameInput" placeholder="e.g. HubSpot AEO Reporting Certification">
+    <label id="trackerDetailLabel">Institution (optional)</label>
+    <input type="text" id="trainInstInput" placeholder="e.g. HubSpot Academy">
+    <label>Stage</label>
+    <select id="trainStageInput">
+      <option id="trackerStageOptThinking" value="thinking">Thinking of</option>
+      <option id="trackerStageOptWorking" value="working">Currently working on</option>
+      <option id="trackerStageOptCompleted" value="completed">Completed</option>
+    </select>
+    <div class="row">
+      <button class="btn secondary" id="cancelAddTraining" style="flex:1;">Cancel</button>
+      <button class="btn blue" id="saveTrainingBtn" style="flex:1;">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TASK MODAL -->
+<div class="overlay" id="editTaskOverlay">
+  <div class="modal">
+    <h3>Edit task</h3>
+    <label>Task name</label>
+    <input type="text" id="editNameInput">
+    <label>Project</label>
+    <select id="editProjectInput"></select>
+    <div id="newProjectInlineEdit" style="display:none;margin-top:8px;padding:10px;border:1.5px dashed var(--gray);border-radius:8px;">
+      <label style="margin-top:0;">New project name</label>
+      <input type="text" id="newProjectNameInlineEdit" placeholder="e.g. Truckload Program">
+      <label>Link to a rock (optional)</label>
+      <select id="newProjectRockInlineEdit"><option value="">No rock</option></select>
+    </div>
+    <label>Due date</label>
+    <input type="date" id="editDueInput">
+    <label>Repeats</label>
+    <select id="editRepeatInput">
+      <option value="">Doesn't repeat</option>
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
+    <label>Waiting on (optional)</label>
+    <input type="text" id="editWaitingInput" list="waitingOnOptions" placeholder="e.g. Brian P">
+    <label style="display:flex;align-items:center;gap:8px;margin-top:14px;text-transform:none;font-size:13px;font-weight:500;cursor:pointer;">
+      <input type="checkbox" id="editFocusInput" style="width:16px;height:16px;accent-color:var(--med-blue);cursor:pointer;margin:0;">
+      Currently working on this (shows on Dashboard)
+    </label>
+    <div class="row">
+      <button class="btn secondary" id="editDeleteBtn" style="flex:1;color:#c0392b;">Delete task</button>
+      <button class="btn blue" id="editSaveBtn" style="flex:1;">Save</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn ghost" id="editCompleteBtn" style="flex:1;">Mark complete</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn ghost" id="editCancelBtn" style="flex:1;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ACCOMPLISHMENT MODAL -->
+<div class="overlay" id="addAccompOverlay">
+  <div class="modal">
+    <h3 id="accompModalTitle">Log an accomplishment</h3>
+    <label>Marketing rock</label>
+    <select id="directAccompRock"></select>
+    <label>Accomplishment</label>
+    <input type="text" id="directAccompText" placeholder="What did you accomplish?">
+    <div class="row">
+      <button class="btn secondary" id="cancelAddAccomp" style="flex:1;">Cancel</button>
+      <button class="btn blue" id="saveAccompBtn" style="flex:1;">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'planner-data-jen-personal-v1';
+// Local file autosave fallback: Claude-generated apps may use window.storage,
+// but normal file:// HTML files in Edge/Chrome do not provide window.storage.
+// This shim stores planner data in the browser's localStorage so refreshes keep changes.
+if (!window.storage) {
+  window.storage = {
+    async get(key) {
+      return { value: localStorage.getItem(key) };
+    },
+    async set(key, value) {
+      localStorage.setItem(key, value);
+      return { ok: true };
+    }
+  };
+}
+let data = null;
+let pendingCompleteTaskId = null;
+let sortState = {key:'due', dir:1};
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function fmtDate(s){ if(!s) return ''; const d=new Date(s+'T00:00:00'); return (d.getMonth()+1)+'/'+d.getDate(); }
+function daysUntil(s){ if(!s) return Infinity; const d=new Date(s+'T00:00:00'); const t=new Date(); t.setHours(0,0,0,0); return Math.round((d-t)/86400000); }
+function addInterval(dateStr, repeat){
+  const d = new Date(dateStr+'T00:00:00');
+  if(repeat==='daily') d.setDate(d.getDate()+1);
+  else if(repeat==='weekly') d.setDate(d.getDate()+7);
+  else if(repeat==='monthly') d.setMonth(d.getMonth()+1);
+  return d.toISOString().slice(0,10);
+}
+function repeatLabel(r){ return r==='daily'?'Daily':r==='weekly'?'Weekly':r==='monthly'?'Monthly':''; }
+function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2200); }
+
+/* ============================================================
+   PLANNER CONFIG
+   This is the ONLY block that should change when customizing
+   this template for a new person or a different tracking use
+   (e.g. Health/Fitness instead of Training). Everything below
+   reads from these values -- no other code needs to change.
+   ============================================================ */
+const PLANNER_CONFIG = {
+  ownerName: "Jen's Personal",
+  tagline: "Currently working on, due this week, and accomplishments",
+  rockCategoryLabel: "Rocks",
+  tracker: {
+    title: "Organizing the House",
+    itemLabel: "Project",
+    namePlaceholder: "e.g. Garage cleanout",
+    detailFieldLabel: "Notes",
+    detailPlaceholder: "e.g. Any other info",
+    stageLabels: {
+      thinking: "Thinking of",
+      working: "Currently working on",
+      completed: "Completed"
+    }
+  }
+};
+
+function applyPlannerConfig(){
+  const c = PLANNER_CONFIG;
+  document.getElementById('pageTitle').textContent = c.ownerName + " Task & Project Planner";
+  document.getElementById('headerTitle').innerHTML = c.ownerName + " Task &amp; Project Planner";
+  document.getElementById('headerTagline').textContent = c.tagline;
+  document.getElementById('rockCategoryLabel').textContent = c.rockCategoryLabel;
+  document.getElementById('trackerNavBtn').textContent = c.tracker.title;
+  document.getElementById('trackerDashTitle').textContent = c.tracker.title;
+  document.getElementById('trackerTabTitle').textContent = c.tracker.title;
+  document.getElementById('openAddTraining').textContent = '+ Add ' + c.tracker.itemLabel;
+  document.getElementById('trackerModalTitle').textContent = 'Add ' + c.tracker.itemLabel;
+  document.getElementById('trainNameInput').placeholder = c.tracker.namePlaceholder;
+  document.getElementById('trackerDetailLabel').textContent = c.tracker.detailFieldLabel;
+  document.getElementById('trainInstInput').placeholder = c.tracker.detailPlaceholder;
+  document.getElementById('trackerColTitleThinking').textContent = c.tracker.stageLabels.thinking;
+  document.getElementById('trackerColTitleWorking').textContent = c.tracker.stageLabels.working;
+  document.getElementById('trackerColTitleCompleted').textContent = c.tracker.stageLabels.completed;
+  document.getElementById('trackerStageOptThinking').textContent = c.tracker.stageLabels.thinking;
+  document.getElementById('trackerStageOptWorking').textContent = c.tracker.stageLabels.working;
+  document.getElementById('trackerStageOptCompleted').textContent = c.tracker.stageLabels.completed;
+}
+applyPlannerConfig();
+
+/* Starter data -- empty by design. This template ships blank; tasks, rocks,
+   and projects get populated during setup (imported or entered by hand). */
+const SEED = {
+  "rocks": [
+    {"id": "rock_health", "name": "Health/Fitness"},
+    {"id": "rock_fun", "name": "Fun"},
+    {"id": "rock_religious_school", "name": "Religious School"}
+  ],
+  "projects": [],
+  "tasks": [],
+  "accomplishments": [],
+  "trainings": []
+};
+
+function migrateFocusFlag(){
+  let migrated = false;
+  data.tasks.forEach(t=>{
+    if(t.focus === undefined){
+      t.focus = isActiveOrUnassigned(t);
+      migrated = true;
+    }
+  });
+  return migrated;
+}
+async function loadData(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){ data = JSON.parse(res.value); }
+    else { data = JSON.parse(JSON.stringify(SEED)); await saveData(); }
+  }catch(e){ data = JSON.parse(JSON.stringify(SEED)); await saveData(); }
+  if(migrateFocusFlag()) await saveData();
+  renderAll();
+  checkBackupReminder();
+}
+async function saveData(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(data), false); }
+  catch(e){ console.error('save failed', e); }
+}
+
+/* BACKUP REMINDER */
+const BACKUP_META_KEY = 'planner-backup-meta';
+async function getBackupMeta(){
+  try{
+    const res = await window.storage.get(BACKUP_META_KEY, false);
+    return res && res.value ? JSON.parse(res.value) : {lastExport:null, snoozeUntil:null};
+  }catch(e){ return {lastExport:null, snoozeUntil:null}; }
+}
+async function setBackupMeta(meta){
+  try{ await window.storage.set(BACKUP_META_KEY, JSON.stringify(meta), false); }catch(e){}
+}
+async function checkBackupReminder(){
+  const meta = await getBackupMeta();
+  const today = todayStr();
+  if(meta.snoozeUntil && meta.snoozeUntil > today) return;
+  const daysSince = meta.lastExport ? daysUntil(meta.lastExport) * -1 : 999;
+  if(daysSince >= 7){
+    const banner = document.getElementById('backupBanner');
+    const text = document.getElementById('backupBannerText');
+    text.textContent = meta.lastExport
+      ? `It's been ${daysSince} days since your last backup — want to export your data now?`
+      : `You haven't backed up your data yet — export a copy in case you ever need to restore it.`;
+    banner.style.display = 'flex';
+  }
+}
+document.getElementById('backupBannerExportBtn').onclick=()=>{
+  document.getElementById('exportDataBtn').click();
+  document.getElementById('backupBanner').style.display = 'none';
+};
+document.getElementById('backupBannerDismissBtn').onclick=async()=>{
+  const meta = await getBackupMeta();
+  const d = new Date(); d.setDate(d.getDate()+7);
+  meta.snoozeUntil = d.toISOString().slice(0,10);
+  await setBackupMeta(meta);
+  document.getElementById('backupBanner').style.display = 'none';
+};
+
+/* TABS */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+    document.getElementById('tab-'+btn.dataset.tab).style.display='block';
+    renderAll();
+  });
+});
+
+/* DUPLICATE DETECTION */
+const STOP=new Set(['the','a','an','on','with','for','to','of','and','in','about','re','is','are','it']);
+function tok(s){ return s.toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w && !STOP.has(w)); }
+function similarity(a,b){ const ta=new Set(tok(a)),tb=new Set(tok(b)); if(!ta.size||!tb.size) return 0; let o=0; ta.forEach(w=>{if(tb.has(w))o++;}); return o/Math.min(ta.size,tb.size); }
+function findDupes(name){
+  return data.tasks.filter(t=>t.status==='open')
+    .map(t=>({t,score:similarity(name,t.name)}))
+    .filter(x=>x.score>=0.5).sort((a,b)=>b.score-a.score);
+}
+
+/* HELPERS */
+function projectById(id){ return data.projects.find(p=>p.id===id); }
+function rockById(id){ return data.rocks.find(r=>r.id===id); }
+function projectName(id){ const p=projectById(id); return p?p.name:''; }
+function isActiveOrUnassigned(t){
+  if(!t.project) return true;
+  const p = projectById(t.project);
+  return p && p.status==='active';
+}
+
+function taskRowHTML(t, showCheckbox){
+  const due = t.dueDate ? fmtDate(t.dueDate) : '';
+  const overdue = t.status==='open' && t.dueDate && daysUntil(t.dueDate)<0;
+  const doneToday = t.status==='complete' && t.completedDate===todayStr();
+  const waitBadge = t.waitingOn ? `<span class="wait-badge">Waiting on ${escapeHtml(t.waitingOn)}</span>` : '';
+  const repeatBadge = t.repeat ? `<span class="wait-badge" style="background:#e3edf3;color:var(--navy);">↻ ${repeatLabel(t.repeat)}</span>` : '';
+  const focusOn = t.focus === true;
+  return `<div class="task-row" data-id="${t.id}">
+    ${showCheckbox?`<input type="checkbox" class="task-check" data-id="${t.id}" ${t.status==='complete'?'checked':''}>`:''}
+    <div class="focus-star" data-focustoggle="${t.id}" title="${focusOn?'Remove from Currently Working On':'Mark as Currently Working On'}">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="${focusOn?'#f2c94c':'none'}" stroke="${focusOn?'#c99a1e':'currentColor'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+    </div>
+    <div class="task-main">
+      <div class="task-name ${doneToday?'done':''}">${escapeHtml(t.name)}</div>
+      <div class="task-meta">${escapeHtml(projectName(t.project)||'No project')}${waitBadge}${repeatBadge}</div>
+    </div>
+    <div class="task-due ${overdue?'overdue':''}">${due}</div>
+    <div class="edit-btn" data-edit="${t.id}" title="Edit task">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+    </div>
+  </div>`;
+}
+
+function attachCheckboxHandlers(scope){
+  (scope||document).querySelectorAll('.task-check').forEach(cb=>{
+    cb.onchange=()=>handleTaskCheck(cb.dataset.id, cb.checked);
+  });
+  (scope||document).querySelectorAll('[data-edit]').forEach(el=>{
+    el.onclick=()=>openEditTaskModal(el.dataset.edit);
+  });
+  (scope||document).querySelectorAll('[data-focustoggle]').forEach(el=>{
+    el.onclick=()=>{
+      const t = data.tasks.find(t=>t.id===el.dataset.focustoggle);
+      if(!t) return;
+      t.focus = !t.focus;
+      saveData();
+      renderAll();
+    };
+  });
+}
+
+let editingTaskId = null;
+function openEditTaskModal(id){
+  const t = data.tasks.find(t=>t.id===id);
+  if(!t) return;
+  editingTaskId = id;
+  document.getElementById('editNameInput').value = t.name;
+  populateProjectSelect(document.getElementById('editProjectInput'), true);
+  document.getElementById('editProjectInput').insertAdjacentHTML('afterbegin', '<option value="__new__">+ Add new project</option>');
+  document.getElementById('editProjectInput').value = t.project || '';
+  document.getElementById('newProjectInlineEdit').style.display = 'none';
+  document.getElementById('newProjectNameInlineEdit').value = '';
+  document.getElementById('newProjectRockInlineEdit').value = '';
+  document.getElementById('editDueInput').value = t.dueDate || '';
+  document.getElementById('editRepeatInput').value = t.repeat || '';
+  document.getElementById('editWaitingInput').value = t.waitingOn || '';
+  document.getElementById('editFocusInput').checked = t.focus === true;
+  refreshWaitingOptions();
+  document.getElementById('editTaskOverlay').classList.add('show');
+}
+document.getElementById('editProjectInput').addEventListener('change', e=>{
+  const showNew = e.target.value === '__new__';
+  document.getElementById('newProjectInlineEdit').style.display = showNew ? 'block' : 'none';
+  if(showNew){
+    const rockSel = document.getElementById('newProjectRockInlineEdit');
+    rockSel.innerHTML = '<option value="">No rock</option>' + data.rocks.map(r=>`<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+  }
+});
+document.getElementById('editCancelBtn').onclick=()=>{ document.getElementById('editTaskOverlay').classList.remove('show'); editingTaskId=null; };
+document.getElementById('editRepeatInput').addEventListener('change', e=>{
+  const dueInput = document.getElementById('editDueInput');
+  if(e.target.value && !dueInput.value){
+    dueInput.value = addInterval(todayStr(), e.target.value);
+    showToast('Suggested a due date — adjust it if needed');
+  }
+});
+document.getElementById('editSaveBtn').onclick=()=>{
+  const t = data.tasks.find(t=>t.id===editingTaskId);
+  if(!t) return;
+  const name = document.getElementById('editNameInput').value.trim();
+  if(!name) return;
+  const repeat = document.getElementById('editRepeatInput').value || null;
+  const dueDate = document.getElementById('editDueInput').value || null;
+  if(repeat && !dueDate){ showToast('Repeating tasks need a due date — add one to continue'); return; }
+  let projectId = document.getElementById('editProjectInput').value || null;
+  if(projectId === '__new__'){
+    const newName = document.getElementById('newProjectNameInlineEdit').value.trim();
+    if(!newName){ showToast('Enter a name for the new project'); return; }
+    const newProj = { id: uid(), name: newName, rock: document.getElementById('newProjectRockInlineEdit').value || null, status: 'active' };
+    data.projects.push(newProj);
+    projectId = newProj.id;
+  }
+  t.name = name;
+  t.project = projectId;
+  t.dueDate = dueDate;
+  t.repeat = repeat;
+  t.waitingOn = document.getElementById('editWaitingInput').value.trim() || null;
+  t.focus = document.getElementById('editFocusInput').checked;
+  saveData();
+  document.getElementById('editTaskOverlay').classList.remove('show');
+  editingTaskId = null;
+  renderAll();
+  showToast('Task updated');
+};
+document.getElementById('editDeleteBtn').onclick=()=>{
+  if(!editingTaskId) return;
+  if(!confirm('Delete this task? This cannot be undone.')) return;
+  data.tasks = data.tasks.filter(t=>t.id!==editingTaskId);
+  saveData();
+  document.getElementById('editTaskOverlay').classList.remove('show');
+  editingTaskId = null;
+  renderAll();
+  showToast('Task deleted');
+};
+document.getElementById('editCompleteBtn').onclick=()=>{
+  const t = data.tasks.find(t=>t.id===editingTaskId);
+  if(!t) return;
+  t.status = 'complete';
+  t.completedDate = todayStr();
+  saveData();
+  document.getElementById('editTaskOverlay').classList.remove('show');
+  editingTaskId = null;
+  openCompleteFlow(t);
+};
+
+function handleTaskCheck(id, checked){
+  const t = data.tasks.find(t=>t.id===id);
+  if(!t) return;
+  if(checked){
+    t.status='complete'; t.completedDate=todayStr();
+    saveData(); openCompleteFlow(t);
+  } else {
+    t.status='open'; t.completedDate=null;
+    saveData(); renderAll();
+  }
+}
+
+/* DASHBOARD */
+function renderDashboard(){
+  const today = todayStr();
+  const relevant = t => t.status==='open' || (t.status==='complete' && t.completedDate===today);
+  const byDueThenStatus = (a,b) => {
+    const statusDiff = (a.status==='complete'?1:0) - (b.status==='complete'?1:0);
+    if(statusDiff !== 0) return statusDiff;
+    return (a.dueDate||'9999-99-99').localeCompare(b.dueDate||'9999-99-99');
+  };
+
+  const working = data.tasks.filter(t=>relevant(t) && t.focus===true).sort(byDueThenStatus);
+  document.getElementById('colWorking').innerHTML = working.length ? working.map(t=>taskRowHTML(t,true)).join('') : '<div class="empty">Nothing marked as Currently Working On yet — click the star on any task to add it here.</div>';
+
+  const dueWeek = data.tasks.filter(t=>relevant(t) && t.dueDate && daysUntil(t.dueDate)<=7).sort(byDueThenStatus);
+  document.getElementById('colDueWeek').innerHTML = dueWeek.length ? dueWeek.map(t=>taskRowHTML(t,true)).join('') : '<div class="empty">Nothing due within 7 days.</div>';
+
+  const trainWorking = data.trainings.filter(t=>t.stage==='working');
+  const trainThinking = data.trainings.filter(t=>t.stage==='thinking');
+  const trainReadOnlyItem = t => `<div class="train-item" style="padding:7px 9px;">
+      <div>${escapeHtml(t.name)}</div>
+      ${t.institution?`<div class="inst">${escapeHtml(t.institution)}</div>`:''}
+    </div>`;
+  let trainHtml = '';
+  trainHtml += `<div style="font-weight:700;font-size:10.5px;color:var(--light-blue);text-transform:uppercase;letter-spacing:.3px;padding:6px 7px 3px;">${escapeHtml(PLANNER_CONFIG.tracker.stageLabels.working)}</div>`;
+  trainHtml += trainWorking.length ? trainWorking.map(trainReadOnlyItem).join('') : '<div class="empty" style="padding:4px 7px 10px;">Nothing in progress.</div>';
+  trainHtml += `<div style="font-weight:700;font-size:10.5px;color:var(--light-blue);text-transform:uppercase;letter-spacing:.3px;padding:10px 7px 3px;border-top:1px solid #eee;margin-top:4px;">${escapeHtml(PLANNER_CONFIG.tracker.stageLabels.thinking)}</div>`;
+  trainHtml += trainThinking.length ? trainThinking.map(trainReadOnlyItem).join('') : '<div class="empty" style="padding:4px 7px 0;">Nothing on the radar yet.</div>';
+  document.getElementById('colTraining').innerHTML = trainHtml;
+  const goLink = document.getElementById('goToTrainingLink');
+  if(goLink) goLink.onclick = ()=>document.querySelector('.tab-btn[data-tab="training"]').click();
+
+  attachCheckboxHandlers();
+  attachTrainingHandlers();
+}
+
+/* ALL TASKS */
+function renderAllTasks(){
+  let tasks = data.tasks.filter(t=>t.status==='open');
+
+  const projSel = document.getElementById('projectFilter');
+  const prevProj = projSel.value;
+  const usedProjectIds = Array.from(new Set(data.tasks.filter(t=>t.project).map(t=>t.project)));
+  const usedProjects = usedProjectIds.map(id=>projectById(id)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name));
+  projSel.innerHTML = '<option value="">All projects</option>' +
+    '<option value="__none__">No project</option>' +
+    usedProjects.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  projSel.value = (prevProj && (prevProj==='__none__' || usedProjectIds.includes(prevProj))) ? prevProj : '';
+  if(projSel.value==='__none__'){ tasks = tasks.filter(t=>!t.project); }
+  else if(projSel.value){ tasks = tasks.filter(t=>t.project===projSel.value); }
+
+  const waitNames = Array.from(new Set(data.tasks.filter(t=>t.waitingOn).map(t=>t.waitingOn))).sort();
+  const filterSel = document.getElementById('waitingFilter');
+  const prevVal = filterSel.value;
+  filterSel.innerHTML = '<option value="">Everyone</option>' + waitNames.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  filterSel.value = waitNames.includes(prevVal) ? prevVal : '';
+  if(filterSel.value){ tasks = tasks.filter(t=>t.waitingOn===filterSel.value); }
+
+  const query = document.getElementById('taskSearchInput').value.trim().toLowerCase();
+  if(query){
+    tasks = tasks.filter(t=>
+      t.name.toLowerCase().includes(query) ||
+      (projectName(t.project)||'').toLowerCase().includes(query) ||
+      (t.waitingOn||'').toLowerCase().includes(query)
+    );
+  }
+
+  const key = sortState.key, dir = sortState.dir;
+  tasks.sort((a,b)=>{
+    let av,bv;
+    if(key==='name'){ av=a.name; bv=b.name; }
+    else if(key==='project'){ av=projectName(a.project); bv=projectName(b.project); }
+    else if(key==='waiting'){ av=a.waitingOn||''; bv=b.waitingOn||''; }
+    else { av=a.dueDate||'9999-99-99'; bv=b.dueDate||'9999-99-99'; }
+    return av.localeCompare(bv)*dir;
+  });
+  const body = document.getElementById('allTasksBody');
+  body.innerHTML = tasks.map(t=>{
+    const overdue = t.dueDate && daysUntil(t.dueDate)<0;
+    const focusOn = t.focus === true;
+    return `<tr style="cursor:pointer;" data-edit="${t.id}">
+      <td style="width:28px;" onclick="event.stopPropagation()"><input type="checkbox" class="task-check" data-id="${t.id}" style="width:15px;height:15px;accent-color:var(--med-blue);cursor:pointer;"></td>
+      <td style="width:24px;" onclick="event.stopPropagation()"><span class="focus-star" data-focustoggle="${t.id}" title="${focusOn?'Remove from Currently Working On':'Mark as Currently Working On'}" style="display:inline-flex;"><svg width="15" height="15" viewBox="0 0 24 24" fill="${focusOn?'#f2c94c':'none'}" stroke="${focusOn?'#c99a1e':'currentColor'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span></td>
+      <td>${escapeHtml(t.name)}</td><td>${escapeHtml(projectName(t.project)||'—')}</td><td>${t.waitingOn?escapeHtml(t.waitingOn):'—'}</td><td style="${overdue?'color:#c0392b;font-weight:700;':''}">${t.dueDate?fmtDate(t.dueDate):'—'}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">No open tasks.</td></tr>';
+  body.querySelectorAll('[data-edit]').forEach(el=>{ el.onclick=()=>openEditTaskModal(el.dataset.edit); });
+  attachCheckboxHandlers(body);
+}
+document.getElementById('waitingFilter').addEventListener('change', renderAllTasks);
+document.getElementById('projectFilter').addEventListener('change', renderAllTasks);
+document.getElementById('taskSearchInput').addEventListener('input', renderAllTasks);
+document.querySelectorAll('[data-sort]').forEach(th=>{
+  th.onclick=()=>{
+    const key = th.dataset.sort;
+    if(sortState.key===key) sortState.dir *= -1; else { sortState.key=key; sortState.dir=1; }
+    renderAllTasks();
+  };
+});
+
+/* PROJECTS BY ROCK */
+function taskCountForProject(pid, status){
+  return data.tasks.filter(t=>t.project===pid && (status?t.status===status:true)).length;
+}
+function projectCardHTML(p){
+  const openCount = taskCountForProject(p.id,'open');
+  return `<div class="proj-card">
+    <div class="proj-head">
+      <div><span class="name">${escapeHtml(p.name)}</span><span class="count">${openCount} open</span></div>
+      <select class="status-select st-${p.status}" data-statussel="${p.id}">
+        <option value="active" ${p.status==='active'?'selected':''}>Active</option>
+        <option value="pending" ${p.status==='pending'?'selected':''}>Pending</option>
+        <option value="completed" ${p.status==='completed'?'selected':''}>Completed</option>
+      </select>
+    </div>
+    <div class="proj-tasks">${data.tasks.filter(t=>t.project===p.id && t.status==='open').map(t=>taskRowHTML(t,false)).join('') || '<div class="empty">No open tasks.</div>'}</div>
+  </div>`;
+}
+function renderProjects(){
+  const rockWrap = document.getElementById('rockProjectsWrap');
+  rockWrap.innerHTML = data.rocks.map(r=>{
+    const projs = data.projects.filter(p=>p.rock===r.id);
+    const active = projs.filter(p=>p.status==='active');
+    const pending = projs.filter(p=>p.status==='pending');
+    const completed = projs.filter(p=>p.status==='completed');
+    return `<div class="rock-block">
+      <h3>${escapeHtml(r.name)}</h3>
+      <div class="cap-note">${active.length} active of ${projs.length} projects</div>
+      ${active.map(projectCardHTML).join('') || '<div class="empty">No active projects under this rock yet.</div>'}
+      ${pending.length ? `<div class="cap-note" style="margin-top:8px;">Pending</div><div class="backlog-list">${pending.map(projectCardHTML).join('')}</div>` : ''}
+      ${completed.length ? `<div class="cap-note" style="margin-top:8px;">Completed</div><div class="backlog-list">${completed.map(projectCardHTML).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  const un = data.projects.filter(p=>!p.rock);
+  document.getElementById('unassignedProjectsWrap').innerHTML = un.map(projectCardHTML).join('') || '<div class="empty">None.</div>';
+
+  document.querySelectorAll('[data-statussel]').forEach(el=>{
+    el.onchange=()=>setProjectStatus(el.dataset.statussel, el.value);
+  });
+  attachCheckboxHandlers();
+}
+function setProjectStatus(pid, newStatus){
+  const p = projectById(pid);
+  if(!p) return;
+  if(newStatus==='active' && p.rock){
+    const activeSiblings = data.projects.filter(x=>x.rock===p.rock && x.status==='active' && x.id!==p.id);
+    if(activeSiblings.length>=3){
+      const r = rockById(p.rock);
+      if(!confirm(`You've got 3 active projects under ${r?r.name:'this rock'} already. Still make "${p.name}" active too?`)){
+        renderProjects();
+        return;
+      }
+    }
+  }
+  p.status = newStatus;
+  saveData(); renderProjects();
+}
+
+/* COMPLETED ARCHIVE */
+function renderCompleted(){
+  const done = data.tasks.filter(t=>t.status==='complete').sort((a,b)=>(b.completedDate||'').localeCompare(a.completedDate||''));
+  const groups = {};
+  done.forEach(t=>{ const k=t.completedDate||'Unknown date'; (groups[k]=groups[k]||[]).push(t); });
+  const wrap = document.getElementById('completedWrap');
+  const keys = Object.keys(groups).sort().reverse();
+  wrap.innerHTML = keys.length ? keys.map(k=>{
+    const items = groups[k];
+    return `<div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:6px;">${k===todayStr()?'Today':k}</div>
+      <div style="border:1px solid var(--gray);border-radius:8px;">
+        ${items.map(t=>`<div class="task-row"><input type="checkbox" checked class="task-check" data-id="${t.id}"><div class="task-main"><div class="task-name done">${escapeHtml(t.name)}</div><div class="task-meta">${escapeHtml(projectName(t.project)||'No project')}</div></div></div>`).join('')}
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Nothing completed yet.</div>';
+  attachCheckboxHandlers();
+}
+
+/* ACCOMPLISHMENTS TAB */
+function renderAccomplishments(){
+  const grid = document.getElementById('rockGrid');
+  grid.innerHTML = data.rocks.map(r=>{
+    const items = data.accomplishments.filter(a=>a.rock===r.id).sort((a,b)=>b.date.localeCompare(a.date));
+    return `<div class="rock-card">
+      <div class="rock-head">${escapeHtml(r.name)}</div>
+      ${items.length ? items.map(a=>`<div class="rock-item" style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div><div>${escapeHtml(a.text)}</div><div class="d">${fmtDate(a.date)}</div></div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <div class="edit-btn" data-accompedit="${a.id}" title="Edit">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+          </div>
+          <div class="edit-btn" data-accompdel="${a.id}" title="Remove">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+          </div>
+        </div>
+      </div>`).join('') : '<div class="rock-item" style="color:var(--light-blue);font-style:italic;">Nothing logged yet.</div>'}
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('[data-accompdel]').forEach(el=>{
+    el.onclick=()=>{
+      if(!confirm('Remove this accomplishment?')) return;
+      data.accomplishments = data.accomplishments.filter(a=>a.id!==el.dataset.accompdel);
+      saveData(); renderAccomplishments();
+    };
+  });
+  document.querySelectorAll('[data-accompedit]').forEach(el=>{
+    el.onclick=()=>openEditAccompModal(el.dataset.accompedit);
+  });
+}
+
+function openEditAccompModal(id){
+  const a = data.accomplishments.find(a=>a.id===id);
+  if(!a) return;
+  editingAccompId = id;
+  document.getElementById('accompModalTitle').textContent = 'Edit accomplishment';
+  document.getElementById('directAccompRock').innerHTML = data.rocks.map(r=>`<option value="${r.id}" ${r.id===a.rock?'selected':''}>${escapeHtml(r.name)}</option>`).join('');
+  document.getElementById('directAccompText').value = a.text;
+  document.getElementById('addAccompOverlay').classList.add('show');
+}
+
+/* TRAINING */
+function trainingItemHTML(tr){
+  return `<div class="train-item" style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
+    <select class="training-stage-select" data-id="${tr.id}" style="font-size:10px;font-weight:700;padding:3px 5px;border-radius:6px;border:1.5px solid var(--gray);font-family:inherit;flex-shrink:0;margin-top:1px;max-width:100%;">
+      <option value="thinking" ${tr.stage==='thinking'?'selected':''}>Thinking of</option>
+      <option value="working" ${tr.stage==='working'?'selected':''}>Working on</option>
+      <option value="completed" ${tr.stage==='completed'?'selected':''}>Completed</option>
+    </select>
+    <div style="flex:1;min-width:0;overflow-wrap:break-word;">
+      <div>${escapeHtml(tr.name)}</div>
+      ${tr.institution?`<div class="inst">${escapeHtml(tr.institution)}</div>`:''}
+    </div>
+    <div class="edit-btn" data-traindel="${tr.id}" title="Remove">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+    </div>
+  </div>`;
+}
+function attachTrainingHandlers(){
+  document.querySelectorAll('.training-stage-select').forEach(sel=>{
+    sel.onchange=()=>{
+      const tr = data.trainings.find(t=>t.id===sel.dataset.id);
+      if(!tr) return;
+      tr.stage = sel.value;
+      if(sel.value==='completed') tr.date = todayStr();
+      saveData();
+      renderAll();
+      showToast(`"${tr.name}" moved to ${sel.options[sel.selectedIndex].text}`);
+    };
+  });
+  document.querySelectorAll('[data-traindel]').forEach(el=>{
+    el.onclick=()=>{
+      const tr = data.trainings.find(t=>t.id===el.dataset.traindel);
+      if(!tr) return;
+      if(!confirm(`Remove "${tr.name}" from ${PLANNER_CONFIG.tracker.itemLabel}?`)) return;
+      data.trainings = data.trainings.filter(t=>t.id!==tr.id);
+      saveData();
+      renderAll();
+    };
+  });
+}
+function renderTraining(){
+  const th = data.trainings.filter(t=>t.stage==='thinking');
+  const wo = data.trainings.filter(t=>t.stage==='working');
+  const co = data.trainings.filter(t=>t.stage==='completed').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('trainThinking').innerHTML = th.map(t=>trainingItemHTML(t)).join('') || '<div class="empty">Nothing yet — add something you are considering.</div>';
+  document.getElementById('trainWorking').innerHTML = wo.map(t=>trainingItemHTML(t)).join('') || '<div class="empty">Nothing in progress.</div>';
+  document.getElementById('trainCompleted').innerHTML = co.map(t=>trainingItemHTML(t)).join('') || '<div class="empty">None logged.</div>';
+  attachTrainingHandlers();
+}
+
+/* SETTINGS */
+function renderSettings(){
+  document.getElementById('rockManageList').innerHTML = data.rocks.map(r=>
+    `<div style="padding:6px 0;font-size:13px;display:flex;justify-content:space-between;">${escapeHtml(r.name)}<span style="cursor:pointer;color:#c0392b;" data-rockdel="${r.id}">Remove</span></div>`
+  ).join('') || '<div class="empty" style="padding:0;">No rocks yet.</div>';
+  document.getElementById('projManageList').innerHTML = data.projects.map(p=>
+    `<div style="padding:8px 0;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #f2f2f2;">
+      <span style="flex:1;">${escapeHtml(p.name)}</span>
+      <select data-projrock="${p.id}" style="font-size:11.5px;padding:5px 8px;border:1.5px solid var(--gray);border-radius:6px;font-family:inherit;">
+        <option value="">No rock</option>
+        ${data.rocks.map(r=>`<option value="${r.id}" ${p.rock===r.id?'selected':''}>${escapeHtml(r.name)}</option>`).join('')}
+      </select>
+      <span style="cursor:pointer;color:#c0392b;flex-shrink:0;" data-projdel="${p.id}">Remove</span>
+    </div>`
+  ).join('') || '<div class="empty" style="padding:0;">No projects yet.</div>';
+  document.querySelectorAll('[data-projrock]').forEach(el=>{
+    el.onchange=()=>{
+      const p = projectById(el.dataset.projrock);
+      if(!p) return;
+      p.rock = el.value || null;
+      saveData();
+      showToast(`"${p.name}" ${p.rock ? 'linked to ' + rockById(p.rock).name : 'unlinked from any rock'}`);
+    };
+  });
+  document.querySelectorAll('[data-rockdel]').forEach(el=>{
+    el.onclick=()=>{
+      const rid = el.dataset.rockdel;
+      const r = rockById(rid);
+      const linkedProjects = data.projects.filter(p=>p.rock===rid);
+      const msg = linkedProjects.length
+        ? `"${r?r.name:'This rock'}" has ${linkedProjects.length} project${linkedProjects.length===1?'':'s'} linked to it (${linkedProjects.map(p=>p.name).join(', ')}). Removing the rock won't delete those projects or their tasks — they'll just show as "not linked to a rock." Continue?`
+        : `Remove "${r?r.name:'this rock'}"? No projects are linked to it, so nothing else is affected.`;
+      if(!confirm(msg)) return;
+      data.rocks = data.rocks.filter(r=>r.id!==rid);
+      data.projects.forEach(p=>{ if(p.rock===rid) p.rock=null; });
+      saveData(); renderSettings();
+    };
+  });
+  document.querySelectorAll('[data-projdel]').forEach(el=>{
+    el.onclick=()=>{
+      const pid = el.dataset.projdel;
+      const p = projectById(pid);
+      const linkedTasks = data.tasks.filter(t=>t.project===pid);
+      const openCount = linkedTasks.filter(t=>t.status==='open').length;
+      const msg = linkedTasks.length
+        ? `"${p?p.name:'This project'}" has ${linkedTasks.length} task${linkedTasks.length===1?'':'s'} attached (${openCount} still open). Removing the project won't delete those tasks — they'll move to "No project" instead. Continue?`
+        : `Remove "${p?p.name:'this project'}"? No tasks are attached, so nothing else is affected.`;
+      if(!confirm(msg)) return;
+      data.tasks.forEach(t=>{ if(t.project===pid) t.project=null; });
+      data.projects = data.projects.filter(p=>p.id!==pid);
+      saveData(); renderSettings();
+    };
+  });
+
+  const rockSel = document.getElementById('newProjRock');
+  rockSel.innerHTML = '<option value="">No rock</option>' + data.rocks.map(r=>`<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+}
+document.getElementById('addRockBtn').onclick=()=>{
+  const v = document.getElementById('newRockName').value.trim();
+  if(!v) return;
+  data.rocks.push({id:uid(),name:v});
+  document.getElementById('newRockName').value='';
+  saveData(); renderSettings();
+};
+document.getElementById('addProjBtn').onclick=()=>{
+  const v = document.getElementById('newProjName').value.trim();
+  if(!v) return;
+  data.projects.push({id:uid(),name:v,rock:document.getElementById('newProjRock').value||null,status:'active'});
+  document.getElementById('newProjName').value='';
+  saveData(); renderSettings();
+};
+
+/* ADD TASK MODAL */
+function populateProjectSelect(sel, includeBlank){
+  const grouped = {};
+  data.projects.forEach(p=>{ const key = p.rock ? (rockById(p.rock)?.name||'Rock') : 'Not linked to a rock'; (grouped[key]=grouped[key]||[]).push(p); });
+  let html = includeBlank ? '<option value="">No project</option>' : '';
+  Object.keys(grouped).forEach(g=>{
+    html += `<optgroup label="${escapeHtml(g)}">` + grouped[g].map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('') + '</optgroup>';
+  });
+  sel.innerHTML = html;
+}
+function refreshWaitingOptions(){
+  const names = Array.from(new Set(['Hernan','Gracie','IT','Brian P', ...data.tasks.filter(t=>t.waitingOn).map(t=>t.waitingOn)]));
+  document.getElementById('waitingOnOptions').innerHTML = names.map(n=>`<option value="${escapeHtml(n)}">`).join('');
+}
+/* BULK ADD */
+function openBulkAddModal(){
+  document.getElementById('bulkTextarea').value = '';
+  document.getElementById('bulkDue').value = '';
+  document.getElementById('bulkWaiting').value = '';
+  populateProjectSelect(document.getElementById('bulkProject'), true);
+  document.getElementById('bulkPreviewWrap').style.display = 'none';
+  refreshWaitingOptions();
+  document.getElementById('bulkAddOverlay').classList.add('show');
+  document.getElementById('bulkTextarea').focus();
+}
+['openBulkAdd','openBulkAdd2','openBulkAdd3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.onclick=openBulkAddModal; });
+document.getElementById('cancelBulkAdd').onclick=()=>document.getElementById('bulkAddOverlay').classList.remove('show');
+
+let bulkPendingLines = [];
+document.getElementById('previewBulkBtn').onclick=()=>{
+  const lines = document.getElementById('bulkTextarea').value.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(!lines.length){ showToast('Paste at least one task first'); return; }
+  bulkPendingLines = lines.map(name=>({ name, include: true, dupes: findDupes(name) }));
+  renderBulkPreview();
+  document.getElementById('bulkPreviewWrap').style.display = 'block';
+};
+function renderBulkPreview(){
+  const wrap = document.getElementById('bulkPreviewList');
+  wrap.innerHTML = bulkPendingLines.map((line, i)=>`
+    <div style="display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-bottom:1px solid #eee;">
+      <input type="checkbox" data-bulkidx="${i}" ${line.include?'checked':''} style="margin-top:2px;width:15px;height:15px;accent-color:var(--med-blue);cursor:pointer;flex-shrink:0;">
+      <div style="flex:1;">
+        <div style="font-size:13px;">${escapeHtml(line.name)}</div>
+        ${line.dupes.length ? `<div style="font-size:11px;color:#8a6d00;margin-top:3px;">Might duplicate: ${escapeHtml(line.dupes[0].t.name)}</div>` : ''}
+      </div>
+    </div>`).join('');
+  wrap.querySelectorAll('[data-bulkidx]').forEach(cb=>{
+    cb.onchange = ()=>{ bulkPendingLines[cb.dataset.bulkidx].include = cb.checked; };
+  });
+}
+document.getElementById('confirmBulkAddBtn').onclick=()=>{
+  const project = document.getElementById('bulkProject').value || null;
+  const dueDate = document.getElementById('bulkDue').value || null;
+  const waitingOn = document.getElementById('bulkWaiting').value.trim() || null;
+  let added = 0;
+  bulkPendingLines.forEach(line=>{
+    if(!line.include) return;
+    data.tasks.push({
+      id: uid(), name: line.name, project, dueDate, waitingOn,
+      status: 'open', createdDate: todayStr(), completedDate: null
+    });
+    added++;
+  });
+  saveData();
+  document.getElementById('bulkAddOverlay').classList.remove('show');
+  bulkPendingLines = [];
+  renderAll();
+  showToast(`Added ${added} task${added===1?'':'s'}`);
+};
+
+function openAddTaskModal(){
+  document.getElementById('taskNameInput').value='';
+  document.getElementById('taskDueInput').value='';
+  document.getElementById('taskRepeatInput').value='';
+  document.getElementById('taskWaitingInput').value='';
+  document.getElementById('taskFocusInput').checked = false;
+  populateProjectSelect(document.getElementById('taskProject'), true);
+  document.getElementById('taskProject').insertAdjacentHTML('afterbegin', '<option value="__new__">+ Add new project</option>');
+  document.getElementById('newProjectInline').style.display = 'none';
+  document.getElementById('newProjectNameInline').value = '';
+  document.getElementById('newProjectRockInline').value = '';
+  refreshWaitingOptions();
+  document.getElementById('dupeWarning').classList.remove('show');
+  document.getElementById('addTaskOverlay').classList.add('show');
+  document.getElementById('taskNameInput').focus();
+}
+document.getElementById('taskProject').addEventListener('change', e=>{
+  const showNew = e.target.value === '__new__';
+  document.getElementById('newProjectInline').style.display = showNew ? 'block' : 'none';
+  if(showNew){
+    const rockSel = document.getElementById('newProjectRockInline');
+    rockSel.innerHTML = '<option value="">No rock</option>' + data.rocks.map(r=>`<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+  }
+});
+document.getElementById('taskRepeatInput').addEventListener('change', e=>{
+  const dueInput = document.getElementById('taskDueInput');
+  if(e.target.value && !dueInput.value){
+    dueInput.value = addInterval(todayStr(), e.target.value);
+    showToast('Suggested a due date — adjust it if needed');
+  }
+});
+['openAddTask','openAddTask2','openAddTask3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.onclick=openAddTaskModal; });
+document.getElementById('cancelAddTask').onclick=()=>document.getElementById('addTaskOverlay').classList.remove('show');
+document.getElementById('taskNameInput').addEventListener('input',e=>{
+  const val = e.target.value.trim();
+  const box = document.getElementById('dupeWarning');
+  if(val.length<4){ box.classList.remove('show'); return; }
+  const matches = findDupes(val);
+  if(matches.length){
+    box.classList.add('show');
+    box.innerHTML = '<b>This might already be on your list:</b><ul>' + matches.slice(0,3).map(m=>`<li>${escapeHtml(m.t.name)}</li>`).join('') + '</ul>';
+  } else box.classList.remove('show');
+});
+document.getElementById('saveTaskBtn').onclick=()=>{
+  const name = document.getElementById('taskNameInput').value.trim();
+  if(!name) return;
+  const repeat = document.getElementById('taskRepeatInput').value || null;
+  const dueDate = document.getElementById('taskDueInput').value || null;
+  if(repeat && !dueDate){ showToast('Repeating tasks need a due date — add one to continue'); return; }
+  let projectId = document.getElementById('taskProject').value || null;
+  if(projectId === '__new__'){
+    const newName = document.getElementById('newProjectNameInline').value.trim();
+    if(!newName){ showToast('Enter a name for the new project'); return; }
+    const newProj = { id: uid(), name: newName, rock: document.getElementById('newProjectRockInline').value || null, status: 'active' };
+    data.projects.push(newProj);
+    projectId = newProj.id;
+  }
+  data.tasks.push({
+    id:uid(), name, project:projectId,
+    dueDate, status:'open',
+    repeat,
+    waitingOn: document.getElementById('taskWaitingInput').value.trim()||null,
+    focus: document.getElementById('taskFocusInput').checked,
+    createdDate:todayStr(), completedDate:null
+  });
+  saveData();
+  document.getElementById('addTaskOverlay').classList.remove('show');
+  document.getElementById('taskWaitingInput').value='';
+  renderAll();
+};
+
+/* COMPLETE FLOW */
+function openCompleteFlow(task){
+  pendingCompleteTaskId = task.id;
+  document.getElementById('completeTitle').textContent = `Nice work — "${task.name}" completed`;
+  const note = document.getElementById('recurrenceNote');
+  const followSection = document.getElementById('followupSection');
+  const endWrap = document.getElementById('endRecurrenceWrap');
+  document.getElementById('endRecurrenceCheckbox').checked = false;
+  if(task.repeat && task.dueDate){
+    const next = addInterval(task.dueDate, task.repeat);
+    note.style.display = 'block';
+    note.textContent = `This repeats ${repeatLabel(task.repeat).toLowerCase()} — the next one will be created automatically, due ${fmtDate(next)}, unless you end the series below.`;
+    endWrap.style.display = 'flex';
+    followSection.style.display = 'none';
+  } else if(task.repeat && !task.dueDate){
+    note.style.display = 'block';
+    note.textContent = `This is set to repeat, but has no due date, so a next occurrence can't be scheduled. Add a due date if you want it to keep recurring.`;
+    endWrap.style.display = 'none';
+    followSection.style.display = 'block';
+  } else {
+    note.style.display = 'none';
+    endWrap.style.display = 'none';
+    followSection.style.display = 'block';
+  }
+  document.getElementById('followupName').value='';
+  document.getElementById('followupDue').value='';
+  populateProjectSelect(document.getElementById('followupProject'), true);
+  document.getElementById('followupProject').value = task.project || '';
+  const rockSel = document.getElementById('accompRock');
+  rockSel.innerHTML = '<option value="">N/A</option>' + data.rocks.map(r=>`<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+  document.getElementById('accompText').value = task.name;
+  document.getElementById('completeOverlay').classList.add('show');
+}
+document.getElementById('finishCompleteBtn').onclick=()=>{
+  const completedTask = data.tasks.find(t=>t.id===pendingCompleteTaskId);
+  const endingSeries = document.getElementById('endRecurrenceCheckbox').checked;
+  if(completedTask && completedTask.repeat && completedTask.dueDate){
+    if(endingSeries){
+      completedTask.repeat = null;
+    } else {
+      data.tasks.push({
+        id: uid(), name: completedTask.name, project: completedTask.project,
+        dueDate: addInterval(completedTask.dueDate, completedTask.repeat),
+        repeat: completedTask.repeat, waitingOn: completedTask.waitingOn || null,
+        status: 'open', createdDate: todayStr(), completedDate: null
+      });
+    }
+  }
+  const followName = document.getElementById('followupName').value.trim();
+  if(followName){
+    data.tasks.push({id:uid(), name:followName, project:document.getElementById('followupProject').value||null,
+      dueDate:document.getElementById('followupDue').value||null, status:'open', createdDate:todayStr(),
+      completedDate:null, followUpOf:pendingCompleteTaskId});
+  }
+  const rockId = document.getElementById('accompRock').value;
+  if(rockId){
+    data.accomplishments.push({id:uid(), rock:rockId, text:document.getElementById('accompText').value.trim(), date:todayStr()});
+  }
+  saveData();
+  document.getElementById('completeOverlay').classList.remove('show');
+  pendingCompleteTaskId = null;
+  renderAll();
+  if(endingSeries) showToast('Recurring series ended');
+};
+
+/* DIRECT ADD ACCOMPLISHMENT */
+let editingAccompId = null;
+document.getElementById('openAddAccomp').onclick=()=>{
+  editingAccompId = null;
+  document.getElementById('accompModalTitle').textContent = 'Log an accomplishment';
+  const sel = document.getElementById('directAccompRock');
+  sel.innerHTML = data.rocks.map(r=>`<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+  document.getElementById('directAccompText').value='';
+  document.getElementById('addAccompOverlay').classList.add('show');
+};
+document.getElementById('cancelAddAccomp').onclick=()=>{ document.getElementById('addAccompOverlay').classList.remove('show'); editingAccompId=null; };
+document.getElementById('saveAccompBtn').onclick=()=>{
+  const text = document.getElementById('directAccompText').value.trim();
+  const rock = document.getElementById('directAccompRock').value;
+  if(!text || !rock) return;
+  if(editingAccompId){
+    const a = data.accomplishments.find(a=>a.id===editingAccompId);
+    if(a){ a.text = text; a.rock = rock; }
+  } else {
+    data.accomplishments.push({id:uid(), rock, text, date:todayStr()});
+  }
+  saveData();
+  document.getElementById('addAccompOverlay').classList.remove('show');
+  editingAccompId = null;
+  renderAccomplishments();
+};
+
+/* TRAINING MODAL */
+document.getElementById('openAddTraining').onclick=()=>{
+  document.getElementById('trainNameInput').value='';
+  document.getElementById('trainInstInput').value='';
+  document.getElementById('trainStageInput').value='thinking';
+  document.getElementById('addTrainingOverlay').classList.add('show');
+};
+document.getElementById('cancelAddTraining').onclick=()=>document.getElementById('addTrainingOverlay').classList.remove('show');
+document.getElementById('saveTrainingBtn').onclick=()=>{
+  const name = document.getElementById('trainNameInput').value.trim();
+  if(!name) return;
+  data.trainings.push({id:uid(), name, institution:document.getElementById('trainInstInput').value.trim(), stage:document.getElementById('trainStageInput').value, date:null});
+  saveData();
+  document.getElementById('addTrainingOverlay').classList.remove('show');
+  renderTraining();
+};
+
+/* COPY SUMMARY */
+document.getElementById('copySummaryBtn').onclick=async()=>{
+  const open = data.tasks.filter(t=>t.status==='open');
+  const lines = [
+    "This is my open task list from my task and project planner. Each line is one task, with its project in [brackets] and due date if it has one.",
+    "Can you help me prioritize what to work on, flag anything that looks overdue or stale, and group related tasks together?",
+    "Note: you can't edit this list directly - it's just pasted text. If I want to change a due date or task based on this conversation, I'll go make that change in the planner myself.",
+    "",
+    "My current open tasks:"
+  ];
+  open.sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')).forEach(t=>{
+    lines.push(`- ${t.name}${t.project?' ['+projectName(t.project)+']':''}${t.dueDate?' (due '+t.dueDate+')':''}`);
+  });
+  const text = lines.join('\n');
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('Copied — paste into a chat with Claude');
+  }catch(e){
+    showToast('Could not copy automatically — select and copy manually');
+  }
+};
+
+/* INIT */
+/* BACKUP & RESTORE */
+async function performExport(silent){
+  const payload = JSON.stringify(data, null, 2);
+  const blob = new Blob([payload], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const filename = `planner-data-backup-${todayStr()}.json`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  const meta = await getBackupMeta();
+  meta.lastExport = todayStr();
+  meta.snoozeUntil = null;
+  await setBackupMeta(meta);
+  showToast(silent ? `Auto-backed up as ${filename}` : 'Data exported');
+  return filename;
+}
+document.getElementById('exportDataBtn').onclick=()=>performExport(false);
+document.getElementById('importDataBtn').onclick=()=>{
+  document.getElementById('importDataFile').click();
+};
+document.getElementById('importDataFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (evt)=>{
+    try{
+      const imported = JSON.parse(evt.target.result);
+      const requiredKeys = ['tasks','projects','rocks','accomplishments','trainings'];
+      const hasAllKeys = requiredKeys.every(k=>Array.isArray(imported[k]));
+      if(!hasAllKeys){ showToast('That file doesn\'t look like a planner backup'); return; }
+      if(!confirm(`Import this backup? It will replace everything currently in the planner (${data.tasks.length} current tasks) with the data from this file (${imported.tasks.length} tasks). This can't be undone.`)) return;
+      data = imported;
+      migrateFocusFlag();
+      await saveData();
+      renderAll();
+      showToast('Data imported');
+    }catch(err){
+      showToast('Could not read that file — is it a valid backup?');
+    }
+    document.getElementById('importDataFile').value = '';
+  };
+  reader.readAsText(file);
+});
+
+function renderAll(){
+  const vis = id => document.getElementById(id).style.display!=='none';
+  if(vis('tab-dashboard')) renderDashboard();
+  if(vis('tab-alltasks')) renderAllTasks();
+  if(vis('tab-projects')) renderProjects();
+  if(vis('tab-completed')) renderCompleted();
+  if(vis('tab-training')) renderTraining();
+  if(vis('tab-accomplishments')) renderAccomplishments();
+  if(vis('tab-settings')) renderSettings();
+}
+loadData();
+</script>
+</body>
+</html>
