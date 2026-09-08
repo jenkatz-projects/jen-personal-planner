@@ -548,8 +548,9 @@
    Paste your project's URL and publishable (anon) key below.
    Never put the service-role key or DB password here.
    ============================================================ */
-const SUPABASE_URL = 'PASTE_PROJECT_URL_HERE';
-const SUPABASE_PUBLISHABLE_KEY = 'PASTE_PUBLISHABLE_KEY_HERE';
+const SUPABASE_URL = 'https://iywupwndqnkxoyrezhrq.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_SGTDtT03UXWh5OB1rGEVAA_sDp3lHUO';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 let currentUser = null;
