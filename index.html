@@ -461,7 +461,7 @@
   </div>
 </div>
 
-<!-- ADD TRAINING MODAL -->
+<!-- ADD/EDIT TRAINING MODAL -->
 <div class="overlay" id="addTrainingOverlay">
   <div class="modal">
     <h3 id="trackerModalTitle">Add training</h3>
@@ -479,6 +479,7 @@
       <button class="btn secondary" id="cancelAddTraining" style="flex:1;">Cancel</button>
       <button class="btn blue" id="saveTrainingBtn" style="flex:1;">Add</button>
     </div>
+    <button class="btn ghost" id="deleteTrainingBtn" style="display:none;width:100%;margin-top:10px;border-color:#c0392b;color:#c0392b;">Delete</button>
   </div>
 </div>
 
@@ -547,8 +548,8 @@
    Paste your project's URL and publishable (anon) key below.
    Never put the service-role key or DB password here.
    ============================================================ */
-const SUPABASE_URL = 'https://iywupwndqnkxoyrezhrq.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_SGTDtT03UXWh5OB1rGEVAA_sDp3lHUO';
+const SUPABASE_URL = 'PASTE_PROJECT_URL_HERE';
+const SUPABASE_PUBLISHABLE_KEY = 'PASTE_PUBLISHABLE_KEY_HERE';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 let currentUser = null;
@@ -1472,7 +1473,7 @@ function openEditAccompModal(id){
 
 /* TRAINING */
 function trainingItemHTML(tr){
-  return `<div class="train-item" style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
+  return `<div class="train-item" data-trainedit="${tr.id}" style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;cursor:pointer;">
     <select class="training-stage-select" data-id="${tr.id}" style="font-size:10px;font-weight:700;padding:3px 5px;border-radius:6px;border:1.5px solid var(--gray);font-family:inherit;flex-shrink:0;margin-top:1px;max-width:100%;">
       <option value="thinking" ${tr.stage==='thinking'?'selected':''}>Thinking of</option>
       <option value="working" ${tr.stage==='working'?'selected':''}>Working on</option>
@@ -1487,8 +1488,22 @@ function trainingItemHTML(tr){
     </div>
   </div>`;
 }
+let editingTrainingId = null;
+function openEditTrainingModal(id){
+  const tr = data.trainings.find(t=>t.id===id);
+  if(!tr) return;
+  editingTrainingId = id;
+  document.getElementById('trackerModalTitle').textContent = 'Edit ' + PLANNER_CONFIG.tracker.itemLabel;
+  document.getElementById('trainNameInput').value = tr.name;
+  document.getElementById('trainInstInput').value = tr.institution || '';
+  document.getElementById('trainStageInput').value = tr.stage;
+  document.getElementById('saveTrainingBtn').textContent = 'Save';
+  document.getElementById('deleteTrainingBtn').style.display = 'block';
+  document.getElementById('addTrainingOverlay').classList.add('show');
+}
 function attachTrainingHandlers(){
   document.querySelectorAll('.training-stage-select').forEach(sel=>{
+    sel.onclick = e => e.stopPropagation();
     sel.onchange=()=>{
       const tr = data.trainings.find(t=>t.id===sel.dataset.id);
       if(!tr) return;
@@ -1500,7 +1515,8 @@ function attachTrainingHandlers(){
     };
   });
   document.querySelectorAll('[data-traindel]').forEach(el=>{
-    el.onclick=()=>{
+    el.onclick=(e)=>{
+      if(e) e.stopPropagation();
       const tr = data.trainings.find(t=>t.id===el.dataset.traindel);
       if(!tr) return;
       if(!confirm(`Remove "${tr.name}" from ${PLANNER_CONFIG.tracker.itemLabel}?`)) return;
@@ -1508,6 +1524,9 @@ function attachTrainingHandlers(){
       saveData();
       renderAll();
     };
+  });
+  document.querySelectorAll('[data-trainedit]').forEach(el=>{
+    el.onclick=()=>openEditTrainingModal(el.dataset.trainedit);
   });
 }
 function renderTraining(){
@@ -1827,17 +1846,48 @@ document.getElementById('saveAccompBtn').onclick=()=>{
 
 /* TRAINING MODAL */
 document.getElementById('openAddTraining').onclick=()=>{
+  editingTrainingId = null;
+  document.getElementById('trackerModalTitle').textContent = 'Add ' + PLANNER_CONFIG.tracker.itemLabel;
   document.getElementById('trainNameInput').value='';
   document.getElementById('trainInstInput').value='';
   document.getElementById('trainStageInput').value='thinking';
+  document.getElementById('saveTrainingBtn').textContent = 'Add';
+  document.getElementById('deleteTrainingBtn').style.display = 'none';
   document.getElementById('addTrainingOverlay').classList.add('show');
 };
-document.getElementById('cancelAddTraining').onclick=()=>document.getElementById('addTrainingOverlay').classList.remove('show');
+document.getElementById('cancelAddTraining').onclick=()=>{
+  editingTrainingId = null;
+  document.getElementById('addTrainingOverlay').classList.remove('show');
+};
 document.getElementById('saveTrainingBtn').onclick=()=>{
   const name = document.getElementById('trainNameInput').value.trim();
   if(!name) return;
-  data.trainings.push({id:uid(), name, institution:document.getElementById('trainInstInput').value.trim(), stage:document.getElementById('trainStageInput').value, date:null});
+  const institution = document.getElementById('trainInstInput').value.trim();
+  const stage = document.getElementById('trainStageInput').value;
+  if(editingTrainingId){
+    const tr = data.trainings.find(t=>t.id===editingTrainingId);
+    if(tr){
+      tr.name = name;
+      tr.institution = institution;
+      if(stage==='completed' && tr.stage!=='completed') tr.date = todayStr();
+      tr.stage = stage;
+    }
+  } else {
+    data.trainings.push({id:uid(), name, institution, stage, date:null});
+  }
   saveData();
+  editingTrainingId = null;
+  document.getElementById('addTrainingOverlay').classList.remove('show');
+  renderTraining();
+};
+document.getElementById('deleteTrainingBtn').onclick=()=>{
+  if(!editingTrainingId) return;
+  const tr = data.trainings.find(t=>t.id===editingTrainingId);
+  if(!tr) return;
+  if(!confirm(`Remove "${tr.name}" from ${PLANNER_CONFIG.tracker.itemLabel}?`)) return;
+  data.trainings = data.trainings.filter(t=>t.id!==editingTrainingId);
+  saveData();
+  editingTrainingId = null;
   document.getElementById('addTrainingOverlay').classList.remove('show');
   renderTraining();
 };
