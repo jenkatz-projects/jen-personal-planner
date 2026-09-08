@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title id="pageTitle">My Task &amp; Project Planner</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -77,6 +78,7 @@
   table.alltasks th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--light-blue);border-bottom:2px solid var(--gray);padding:8px 6px;cursor:pointer;}
   table.alltasks td{padding:8px 6px;border-bottom:1px solid #eee;}
   table.alltasks tr:hover td{background:#fafafa;}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 
   .rock-block{margin-bottom:22px;}
   .rock-block h3{color:var(--navy);font-size:14px;margin:0 0 4px;}
@@ -95,6 +97,30 @@
   @media(max-width:820px){.train-cols{grid-template-columns:1fr;}}
   .train-item{padding:9px 10px;border-bottom:1px solid #eee;font-size:12.5px;}
   .train-item .inst{font-size:10.5px;color:var(--light-blue);font-weight:700;margin-top:2px;}
+
+  /* ============================================================
+     MOBILE
+     Narrow phone widths: tighten the fixed side margins/padding
+     that assume desktop space, turn the tab bar into a swipeable
+     single row instead of wrapping across several lines, and give
+     checkbox/star/edit tap targets a bit more room for a finger
+     instead of a mouse pointer. Layout and functionality are
+     unchanged -- this only adjusts spacing and sizing.
+     ============================================================ */
+  @media(max-width:600px){
+    .header{padding:18px 16px;}
+    .header h1{font-size:19px;}
+    .nav{margin:12px 12px 0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    .nav::-webkit-scrollbar{display:none;}
+    .nav button{flex:0 0 auto;padding:9px 12px;font-size:12px;}
+    .panel{margin:0 10px;padding:14px;min-height:0;}
+    .toolbar{gap:8px;}
+    .toolbar-right{width:100%;}
+    .toolbar-right input, .toolbar-right select{flex:1 1 120px;min-width:0;}
+    .task-row input[type=checkbox]{width:19px;height:19px;}
+    .edit-btn, .focus-star{padding:8px 4px;}
+    .rock-grid{grid-template-columns:1fr;}
+  }
 
   .overlay{position:fixed;inset:0;background:rgba(1,66,106,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
   .overlay.show{display:flex;}
@@ -241,6 +267,7 @@
           <button class="btn secondary" id="openBulkAdd2">+ Bulk add</button>
         </div>
       </div>
+      <div class="table-scroll">
       <table class="alltasks">
         <thead><tr>
           <th></th>
@@ -252,6 +279,7 @@
         </tr></thead>
         <tbody id="allTasksBody"></tbody>
       </table>
+      </div>
     </div>
 
     <div class="tab-panel" id="tab-projects" style="display:none;">
@@ -1091,7 +1119,7 @@ function taskRowHTML(t, showCheckbox){
   const waitBadge = t.waitingOn ? `<span class="wait-badge">Waiting on ${escapeHtml(t.waitingOn)}</span>` : '';
   const repeatBadge = t.repeat ? `<span class="wait-badge" style="background:#e3edf3;color:var(--navy);">↻ ${repeatLabel(t.repeat)}</span>` : '';
   const focusOn = t.focus === true;
-  return `<div class="task-row" data-id="${t.id}">
+  return `<div class="task-row" data-edit="${t.id}" style="cursor:pointer;">
     ${showCheckbox?`<input type="checkbox" class="task-check" data-id="${t.id}" ${t.status==='complete'?'checked':''}>`:''}
     <div class="focus-star" data-focustoggle="${t.id}" title="${focusOn?'Remove from Currently Working On':'Mark as Currently Working On'}">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="${focusOn?'#f2c94c':'none'}" stroke="${focusOn?'#c99a1e':'currentColor'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
@@ -1109,13 +1137,15 @@ function taskRowHTML(t, showCheckbox){
 
 function attachCheckboxHandlers(scope){
   (scope||document).querySelectorAll('.task-check').forEach(cb=>{
+    cb.onclick = e => e.stopPropagation(); // don't let a checkbox tap also open the edit modal
     cb.onchange=()=>handleTaskCheck(cb.dataset.id, cb.checked);
   });
   (scope||document).querySelectorAll('[data-edit]').forEach(el=>{
-    el.onclick=()=>openEditTaskModal(el.dataset.edit);
+    el.onclick=(e)=>{ if(e) e.stopPropagation(); openEditTaskModal(el.dataset.edit); };
   });
   (scope||document).querySelectorAll('[data-focustoggle]').forEach(el=>{
-    el.onclick=()=>{
+    el.onclick=(e)=>{
+      if(e) e.stopPropagation(); // don't let a star tap also open the edit modal
       const t = data.tasks.find(t=>t.id===el.dataset.focustoggle);
       if(!t) return;
       t.focus = !t.focus;
